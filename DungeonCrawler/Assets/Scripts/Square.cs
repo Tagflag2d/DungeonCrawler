@@ -9,8 +9,11 @@ public class Square : MonoBehaviour
     public Color normalColor, moveColor, attackColor; // NormalColor is default color of squares, MoveColor is where player lands after using move
     public Color enemyAttackColor;
 
+    public GameObject onSquare;
+
     void Awake()
     {
         meshRenderer = GetComponent<MeshRenderer>();
+        onSquare = null;
     }
 }
