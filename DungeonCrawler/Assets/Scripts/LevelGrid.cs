@@ -5,7 +5,7 @@ using UnityEngine;
 //[ExecuteInEditMode]
 public class LevelGrid : MonoBehaviour
 {
-    public static LevelGrid instance;
+    public static LevelGrid instance = null;
 
     public int gridSizeX, gridSizeZ;
     public GameObject squarePrefab;

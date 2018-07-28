@@ -12,9 +12,21 @@ public abstract class MoveableObject : MonoBehaviour
     // Use this for initialization
     void Awake()
     {
-        grid = GameObject.FindObjectOfType<LevelGrid>();
+        grid = LevelGrid.instance;
+        if (grid != null)
+            grid.squaresField[(int)transform.position.x, (int)transform.position.z].GetComponent<Square>().onSquare = gameObject;
     }
 
+    void LateUpdate()
+    {
+        if (grid == null)
+        {
+            grid = LevelGrid.instance;
+            grid.squaresField[(int)transform.position.x, (int)transform.position.z].GetComponent<Square>().onSquare = gameObject;
+        }
+    }
+
+    #region Player Only Code // Needs to be put into PlayerCharacter Class
     // Moves Forward by 1 square, to where the camera is pointing at
     public void MoveForwardByOneCamera()
     {
@@ -43,9 +55,10 @@ public abstract class MoveableObject : MonoBehaviour
         newPos = new Vector3(Mathf.Round(newPos.x), 0, Mathf.Round(newPos.z)); // get squares direction to move to (vector * vector-squares for more than 1)
         MoveToPosition((int)(Mathf.Round(transform.position.x) + newPos.x), (int)(Mathf.Round(transform.position.z) + newPos.z)); // calculate new position and move there
     }
+    #endregion
 
-    // Moves Object to this coordinate
-    public void MoveToPosition(int x, int z)
+    // Moves Object to this coordinate, returns false if moving was not possible
+    public bool MoveToPosition(int x, int z)
     {
         if (CanMoveToPosition(x, z))
         {
@@ -58,9 +71,19 @@ public abstract class MoveableObject : MonoBehaviour
             grid.squaresField[(int)oldPosition.x, (int)oldPosition.y].GetComponent<Square>().onSquare = null;
             grid.squaresField[x, z].GetComponent<Square>().onSquare = this.gameObject;
 
+            // Rotate to new Direczion
+            transform.LookAt(newPos);
+
             StartCoroutine("SmoothMove", newPos);
+            return true;
         }
-        // else do something that tells you can't move there?
+        else // else don't move, but still rotate
+        {
+            Vector3 newPos = new Vector3(x, transform.position.y, z);
+            transform.LookAt(newPos);
+            FinishedMoving();
+            return false;
+        }
     }
 
     // Makes smooth movement between positions possible
@@ -69,11 +92,11 @@ public abstract class MoveableObject : MonoBehaviour
         while (Vector3.Distance(newPos, transform.position) > Vector3.kEpsilon)
         {
             transform.position = Vector3.MoveTowards(transform.position, newPos, moveSpeed);
-
             yield return null;
         }
 
         movingFinished = true;
+        FinishedMoving();
     }
 
     private bool CanMoveToPosition(int x, int z)
@@ -82,11 +105,24 @@ public abstract class MoveableObject : MonoBehaviour
         if (x < 0 || x >= grid.gridSizeX || z < 0 || z >= grid.gridSizeZ)
             return false;
 
+        Square s = grid.squaresField[x, z].GetComponent<Square>();
+
         // Is square empty?
-        if (grid.squaresField[x, z].GetComponent<Square>().onSquare != null)
+        if (s.onSquare != null)
             return false;
 
         // Can move
         return true;
+    }
+
+    public GameObject WhatsInTheWay(int x, int z)
+    {
+        Square s = grid.squaresField[x, z].GetComponent<Square>();
+        return s.onSquare;
+    }
+
+    public virtual void FinishedMoving()
+    {
+
     }
 }

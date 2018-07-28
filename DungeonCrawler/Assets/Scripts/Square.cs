@@ -16,4 +16,9 @@ public class Square : MonoBehaviour
         meshRenderer = GetComponent<MeshRenderer>();
         onSquare = null;
     }
+
+    public void ChangeColor(Color color)
+    {
+        meshRenderer.material.SetColor("_Color", color);
+    }
 }
